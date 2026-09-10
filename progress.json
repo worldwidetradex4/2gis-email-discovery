@@ -1,31 +1,34 @@
 {
-  "next_row": 333000,
-  "batch": 32,
-  "processed": 333000,
-  "emails": 67947,
+  "next_row": 353000,
+  "batch": 33,
+  "processed": 353000,
+  "emails": 68474,
   "done": false,
-  "updated_at": "2026-09-10T15:47:22Z",
+  "updated_at": "2026-09-10T15:55:48Z",
   "last_batch": {
-    "start_row": 313000,
+    "start_row": 333000,
     "processed": 20000,
-    "hosts": 5862,
-    "emails": 171,
-    "timeouts": 16029,
+    "hosts": 7240,
+    "emails": 527,
+    "timeouts": 14442,
     "errors": {
-      "invalid_url": 3694,
-      "http_403": 18,
-      "http_404": 3,
-      "http_456": 1,
-      "no_email": 64,
-      "ServerDisconnectedError": 13,
-      "ClientConnectorDNSError": 2,
-      "http_447": 1,
-      "timeout": 16029,
-      "ClientConnectorCertificateError": 1
+      "invalid_url": 3821,
+      "no_email": 1323,
+      "ClientConnectorDNSError": 21,
+      "http_403": 15,
+      "http_402": 2,
+      "ClientConnectorCertificateError": 10,
+      "ClientConnectorSSLError": 4,
+      "timeout": 14442,
+      "http_401": 26,
+      "http_404": 14,
+      "http_503": 1,
+      "ClientPayloadError": 1,
+      "ClientOSError": 1
     },
-    "result_file": "results/astra-emails-000032.csv.gz",
-    "timeout_file": "results/astra-timeouts-000032.csv.gz",
-    "elapsed_seconds": 372.39
+    "result_file": "results/astra-emails-000033.csv.gz",
+    "timeout_file": "results/astra-timeouts-000033.csv.gz",
+    "elapsed_seconds": 466.04
   },
-  "timeouts": 184796
+  "timeouts": 199238
 }
