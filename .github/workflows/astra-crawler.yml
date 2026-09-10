@@ -1,0 +1,73 @@
+name: Astra email crawler
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: Companies per run
+        required: false
+        default: "1000"
+  push:
+    branches: [master]
+    paths:
+      - astra_crawler.py
+      - requirements.txt
+      - .github/workflows/astra-crawler.yml
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: astra-email-crawler
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Crawl next batch
+        env:
+          BATCH_SIZE: ${{ inputs.batch_size || '1000' }}
+          CONCURRENCY: "80"
+          PER_HOST: "2"
+          MAX_PAGES: "18"
+          REQUEST_TIMEOUT: "10"
+        run: python astra_crawler.py
+
+      - name: Commit checkpoint and results
+        run: |
+          git config user.name "astra-crawler[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add progress.json results/
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            BATCH=$(python -c "import json; print(json.load(open('progress.json'))['batch'])")
+            git commit -m "Astra crawl batch ${BATCH}"
+            git pull --rebase origin master
+            git push origin master
+          fi
+
+      - name: Continue with next batch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DONE=$(python -c "import json; print(str(json.load(open('progress.json')).get('done', False)).lower())")
+          if [ "$DONE" != "true" ]; then
+            sleep 20
+            gh workflow run astra-crawler.yml --ref master -f batch_size=1000
+          fi
