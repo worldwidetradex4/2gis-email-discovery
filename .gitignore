@@ -1,0 +1,42 @@
+# === Data files (too large for Git) ===
+2gis.db
+2gis.db-shm
+2gis.db-wal
+*.csv
+*.xlsx
+*.xls
+
+# === Batch logs (~9GB total) ===
+batch_*.log
+batch_*_qc.log
+_batch*.txt
+
+# === Runtime state ===
+MASTER_PROGRESS.json
+loop_driver.lockdir/
+.driver_crawler_pid
+
+# === Python cache ===
+__pycache__/
+*.pyc
+*.pyo
+
+# === Virtual environments ===
+.venv*/
+venv/
+env/
+
+# === ZCode internal ===
+.zcode/
+_chunks/
+
+# === Temp/debug files ===
+_*.txt
+_*.py
+_*.log
+
+# === Chrome profile ===
+chrome_profile/
+
+# === Node modules ===
+node_modules/
