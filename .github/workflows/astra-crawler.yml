@@ -1,7 +1,8 @@
 name: Astra email crawler
 
-# Resume trigger: row 13000
 on:
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       batch_size:
@@ -70,5 +71,5 @@ jobs:
           DONE=$(python -c "import json; print(str(json.load(open('progress.json')).get('done', False)).lower())")
           if [ "$DONE" != "true" ]; then
             sleep 20
-            gh workflow run astra-crawler.yml --ref master -f batch_size=5000
+            gh workflow run astra-crawler.yml --ref master -f batch_size=5000 || true
           fi
