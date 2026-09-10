@@ -44,7 +44,7 @@ jobs:
       - name: Crawl next batch
         env:
           BATCH_SIZE: ${{ inputs.batch_size || '20000' }}
-          CONCURRENCY: "80"
+          CONCURRENCY: "120"
           PER_HOST: "2"
           MAX_PAGES: "18"
           REQUEST_TIMEOUT: "10"
