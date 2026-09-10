@@ -1,23 +1,26 @@
 {
-  "next_row": 793000,
-  "batch": 55,
-  "processed": 793000,
-  "emails": 82515,
+  "next_row": 813000,
+  "batch": 56,
+  "processed": 813000,
+  "emails": 82538,
   "done": false,
-  "updated_at": "2026-09-10T19:04:01Z",
+  "updated_at": "2026-09-10T19:12:53Z",
   "last_batch": {
-    "start_row": 773000,
+    "start_row": 793000,
     "processed": 20000,
-    "hosts": 11689,
-    "emails": 5,
-    "timeouts": 16275,
+    "hosts": 7721,
+    "emails": 23,
+    "timeouts": 15961,
     "errors": {
-      "invalid_url": 3721,
-      "timeout": 16275
+      "invalid_url": 4014,
+      "no_email": 9,
+      "http_403": 2,
+      "http_500": 1,
+      "timeout": 15961
     },
-    "result_file": "results/astra-emails-000055.csv.gz",
-    "timeout_file": "results/astra-timeouts-000055.csv.gz",
-    "elapsed_seconds": 736.5
+    "result_file": "results/astra-emails-000056.csv.gz",
+    "timeout_file": "results/astra-timeouts-000056.csv.gz",
+    "elapsed_seconds": 489.12
   },
-  "timeouts": 520356
+  "timeouts": 536317
 }
