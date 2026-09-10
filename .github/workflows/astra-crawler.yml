@@ -1,6 +1,6 @@
 name: Astra email crawler
 
-# Resume trigger: row 73000
+# Resume trigger: row 93000
 on:
   schedule:
     - cron: "*/15 * * * *"
@@ -45,7 +45,7 @@ jobs:
       - name: Crawl next batch
         env:
           BATCH_SIZE: ${{ inputs.batch_size || '20000' }}
-          CONCURRENCY: "120"
+          CONCURRENCY: "80"
           PER_HOST: "2"
           MAX_PAGES: "18"
           REQUEST_TIMEOUT: "10"
