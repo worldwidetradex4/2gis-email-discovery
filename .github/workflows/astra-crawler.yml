@@ -1,5 +1,6 @@
 name: Astra email crawler
 
+# Resume trigger: row 13000
 on:
   workflow_dispatch:
     inputs:
