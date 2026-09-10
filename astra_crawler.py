@@ -24,7 +24,7 @@ PER_HOST = int(os.getenv("PER_HOST", "2"))
 MAX_PAGES = int(os.getenv("MAX_PAGES", "18"))
 TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "10"))
 MAX_BYTES = int(os.getenv("MAX_RESPONSE_BYTES", str(2 * 1024 * 1024)))
-USER_AGENT = "AstraEmailDiscovery/1.0 (+https://github.com/worldwidetradex4/2gis-email-discovery)"
+USER_AGENT = "AstraEmailDiscovery/1.1 (+https://github.com/worldwidetradex4/2gis-email-discovery)"
 
 EMAIL_RE = re.compile(r"(?i)(?<![\w.+-])([a-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+)")
 CONTACT_HINTS = ("contact", "contacts", "kontakt", "kontakty", "kontakti", "контакт", "about", "o-nas", "company", "requisite", "rekvizit", "связ", "feedback")
@@ -174,7 +174,7 @@ async def crawl_site(session, start_url):
 def state_read():
     if STATE.exists():
         return json.loads(STATE.read_text(encoding="utf-8"))
-    return {"next_row": 0, "batch": 0, "processed": 0, "emails": 0, "done": False}
+    return {"next_row": 0, "batch": 0, "processed": 0, "emails": 0, "timeouts": 0, "done": False}
 
 
 def state_write(state):
@@ -191,11 +191,10 @@ def read_batch(start, limit):
                 continue
             if len(rows) >= limit:
                 break
-            website = (row.get("website") or "").strip()
             rows.append({
                 "company_id": str(row.get("company_id", "")),
                 "company_name": str(row.get("company_name", "")),
-                "website": website,
+                "website": (row.get("website") or "").strip(),
             })
     return rows
 
@@ -215,6 +214,13 @@ def known_emails():
         except (OSError, EOFError, csv.Error):
             continue
     return known
+
+
+def write_gzip_csv(path, columns, rows):
+    with gzip.open(path, "wt", encoding="utf-8", newline="", compresslevel=6) as stream:
+        writer = csv.DictWriter(stream, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 async def main():
@@ -245,6 +251,7 @@ async def main():
     semaphore = asyncio.Semaphore(CONCURRENCY)
     headers = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1"}
     output = []
+    timed_out = []
 
     async with aiohttp.ClientSession(timeout=timeout, connector=connector, headers=headers) as session:
         async def process(group):
@@ -252,6 +259,15 @@ async def main():
                 findings, error = await crawl_site(session, group[0]["website"])
             if error:
                 errors[error] += len(group)
+            if error == "timeout":
+                for company in group:
+                    timed_out.append({
+                        "company_id": company["company_id"],
+                        "company_name": company["company_name"],
+                        "website": company["website"],
+                        "error": "timeout",
+                        "batch": batch,
+                    })
             for company in group:
                 for email, source_url in findings.items():
                     if email in previous:
@@ -266,21 +282,21 @@ async def main():
                     })
         await asyncio.gather(*(process(group) for group in groups.values()))
 
-    unique = {(row["company_id"], row["email"]): row for row in output}
-    output = sorted(unique.values(), key=lambda row: (row["company_id"], row["email"]))
+    output = sorted({(row["company_id"], row["email"]): row for row in output}.values(), key=lambda row: (row["company_id"], row["email"]))
+    timed_out.sort(key=lambda row: row["company_id"])
     RESULTS.mkdir(parents=True, exist_ok=True)
     result_file = RESULTS / f"astra-emails-{batch:06d}.csv.gz"
-    columns = ["company_id", "company_name", "website", "email", "source_url", "source_type"]
-    with gzip.open(result_file, "wt", encoding="utf-8", newline="", compresslevel=6) as stream:
-        writer = csv.DictWriter(stream, fieldnames=columns)
-        writer.writeheader()
-        writer.writerows(output)
+    timeout_file = RESULTS / f"astra-timeouts-{batch:06d}.csv.gz"
+    write_gzip_csv(result_file, ["company_id", "company_name", "website", "email", "source_url", "source_type"], output)
+    if timed_out:
+        write_gzip_csv(timeout_file, ["company_id", "company_name", "website", "error", "batch"], timed_out)
 
     state.update({
         "next_row": start + len(companies),
         "batch": batch,
         "processed": int(state.get("processed", 0)) + len(companies),
         "emails": int(state.get("emails", 0)) + len(output),
+        "timeouts": int(state.get("timeouts", 0)) + len(timed_out),
         "done": False,
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "last_batch": {
@@ -288,8 +304,10 @@ async def main():
             "processed": len(companies),
             "hosts": len(groups),
             "emails": len(output),
+            "timeouts": len(timed_out),
             "errors": dict(errors),
             "result_file": str(result_file),
+            "timeout_file": str(timeout_file) if timed_out else None,
             "elapsed_seconds": round(time.monotonic() - started, 2),
         },
     })
