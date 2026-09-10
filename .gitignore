@@ -6,6 +6,10 @@
 *.xlsx
 *.xls
 
+# === Include these CSV.gz exports ===
+!companies_with_emails.csv.gz
+!companies_no_email.csv.gz
+
 # === Batch logs (~9GB total) ===
 batch_*.log
 batch_*_qc.log
