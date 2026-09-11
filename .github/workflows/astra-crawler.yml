@@ -1,6 +1,6 @@
 name: Astra email crawler
 
-# Resume trigger: row 313000
+# Resume trigger: row 953000
 on:
   schedule:
     - cron: "*/15 * * * *"
